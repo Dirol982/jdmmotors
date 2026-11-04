@@ -21,11 +21,24 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
 
   /* ---------- hero: video + showroom light over the badge ---------- */
+  // the background clip loads only on wide screens with a normal connection, after the page is idle,
+  // and pauses whenever the banner is off screen or the tab is hidden
   const video = document.querySelector('.hero__video');
-  if (video && !reduce && !navigator.connection?.saveData) {
-    video.src = video.dataset.src;
-    video.addEventListener('playing', () => video.classList.add('is-playing'), { once: true });
-    video.play().catch(() => {});
+  const conn = navigator.connection || {};
+  const wantVideo = video && !reduce && !conn.saveData && !/2g/.test(conn.effectiveType || '') && matchMedia('(min-width: 900px)').matches;
+  if (wantVideo) {
+    let heroVisible = true;
+    const sync = () => { if (heroVisible && !document.hidden) video.play().catch(() => {}); else video.pause(); };
+    const start = () => {
+      video.src = video.dataset.src;
+      video.addEventListener('playing', () => video.classList.add('is-playing'), { once: true });
+      sync();
+      new IntersectionObserver(([en]) => { heroVisible = en.isIntersecting; sync(); }).observe(video);
+      document.addEventListener('visibilitychange', sync);
+    };
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
+    if (document.readyState === 'complete') idle(start, { timeout: 2500 });
+    else window.addEventListener('load', () => idle(start, { timeout: 2500 }), { once: true });
   }
 
   const sheen = document.getElementById('sheen');
@@ -58,8 +71,11 @@
     // afterwards the light follows the pointer, like a lamp passing over paint
     const svg = document.querySelector('.hero__logo');
     function armPointer() {
+      let r = svg.getBoundingClientRect();
+      window.addEventListener('resize', () => { r = svg.getBoundingClientRect(); }, { passive: true });
+      window.addEventListener('scroll', () => { r = svg.getBoundingClientRect(); }, { passive: true });
       hero.addEventListener('pointermove', (e) => {
-        const r = svg.getBoundingClientRect();
+        if (e.clientY > r.bottom + 160) return;
         const u = 14 + ((e.clientX - r.left) / r.width) * 240;
         goTo(u - 17);
       });
@@ -306,10 +322,12 @@
     }, { rootMargin: '600px 0px' });
     io.observe(reels);
   }
-  const track = document.querySelector('.reels__viewport');
-  document.querySelectorAll('.rnav').forEach((b) => b.addEventListener('click', () => {
-    track.scrollBy({ left: Number(b.dataset.dir) * Math.min(track.clientWidth * 0.8, 712), behavior: reduce ? 'auto' : 'smooth' });
-  }));
+  const reelsGrid = document.getElementById('reelsGrid');
+  document.getElementById('reelsMore')?.addEventListener('click', (e) => {
+    reelsGrid.classList.remove('is-collapsed');
+    e.currentTarget.parentElement.hidden = true;
+    window.instgrm?.Embeds.process();
+  });
 
   /* ---------- floating call button ---------- */
   const fab = document.querySelector('.fab');
