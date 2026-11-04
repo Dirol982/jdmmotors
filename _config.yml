@@ -3,3 +3,4 @@ exclude:
   - DESIGN.md
   - README.md
   - .impeccable
+  - kp
