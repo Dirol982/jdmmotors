@@ -1,0 +1,5 @@
+exclude:
+  - PRODUCT.md
+  - DESIGN.md
+  - README.md
+  - .impeccable
