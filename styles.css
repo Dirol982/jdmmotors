@@ -530,7 +530,10 @@ video.lb__media { cursor: default; background: #000; width: min(92vw, 1100px); }
 @media (max-width: 360px) {
   :root { --fs-h2: 1.7rem; --fs-h3: 1.25rem; }
 }
-h1, h2, h3 { overflow-wrap: break-word; }
+h1, h2, h3, .bay__name, .models__brand { overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; hyphenate-limit-chars: 8 4 4; }
+@media (max-width: 560px) {
+  :root { --fs-h2: clamp(1.6rem, 8.2vw, 2.4rem); }
+}
 
 html, body { overflow-x: clip; }
 
